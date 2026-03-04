@@ -19,12 +19,18 @@ export default function Layout() {
   const location = useLocation()
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      <main className="max-w-lg mx-auto px-4 pt-4">
+    <div
+      className="min-h-screen bg-slate-50"
+      style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
+    >
+      <main
+        className="max-w-lg mx-auto px-4"
+        style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))' }}
+      >
         <Outlet />
       </main>
 
-      <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 z-50">
+      <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-50">
         <div className="max-w-lg mx-auto flex items-center justify-around px-2 py-1">
           {navItems.map(({ to, icon: Icon, label }) => {
             const active = location.pathname === to || 
@@ -45,7 +51,7 @@ export default function Layout() {
             )
           })}
         </div>
-        <div className="h-[env(safe-area-inset-bottom)]" />
+        <div style={{ height: 'env(safe-area-inset-bottom, 0px)' }} />
       </nav>
     </div>
   )

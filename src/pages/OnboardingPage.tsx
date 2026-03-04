@@ -90,7 +90,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center p-4" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-white">{STEPS[step].title}</h1>
