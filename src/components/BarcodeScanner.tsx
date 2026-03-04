@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
+import { useI18n } from '@/i18n'
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void
@@ -7,6 +8,7 @@ interface BarcodeScannerProps {
 }
 
 export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
+  const { t } = useI18n()
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const [error, setError] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
@@ -29,7 +31,7 @@ export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps)
           () => {}
         )
       } catch {
-        setError('Unable to access camera. Please check permissions or enter barcode manually.')
+        setError(t('scan_error'))
       }
     }
 
@@ -38,15 +40,15 @@ export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps)
     return () => {
       scannerRef.current?.stop().catch(() => {})
     }
-  }, [onScan])
+  }, [onScan, t])
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center p-4">
       <div className="bg-white rounded-2xl overflow-hidden w-full max-w-sm">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="font-semibold">Scan Barcode</h3>
+          <h3 className="font-semibold">{t('scan_title')}</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-sm font-medium">
-            Cancel
+            {t('scan_cancel')}
           </button>
         </div>
         <div ref={containerRef} className="bg-black">
@@ -56,7 +58,7 @@ export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps)
           <div className="p-4 text-sm text-red-600 text-center">{error}</div>
         )}
         <div className="p-3 text-center text-xs text-slate-500">
-          Point camera at a product barcode
+          {t('scan_hint')}
         </div>
       </div>
     </div>

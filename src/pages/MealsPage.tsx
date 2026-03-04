@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/i18n'
 import { supabase } from '@/lib/supabase'
 import { lookupBarcode, analyzePhoto, analyzeText } from '@/lib/food-api'
 import type { Meal, MealType, MealInputMethod, NutritionDetails } from '@/lib/types'
@@ -16,22 +17,23 @@ import toast from 'react-hot-toast'
 
 type InputTab = 'barcode' | 'photo' | 'text' | 'manual'
 
-const INPUT_TABS: { id: InputTab; label: string; icon: typeof ScanBarcode }[] = [
-  { id: 'barcode', label: 'Barcode', icon: ScanBarcode },
-  { id: 'photo', label: 'Photo', icon: Camera },
-  { id: 'text', label: 'AI Text', icon: MessageSquare },
-  { id: 'manual', label: 'Manual', icon: PencilLine },
+const INPUT_TABS: { id: InputTab; labelKey: 'meals_barcode' | 'meals_photo' | 'meals_ai_text' | 'meals_manual'; icon: typeof ScanBarcode }[] = [
+  { id: 'barcode', labelKey: 'meals_barcode', icon: ScanBarcode },
+  { id: 'photo', labelKey: 'meals_photo', icon: Camera },
+  { id: 'text', labelKey: 'meals_ai_text', icon: MessageSquare },
+  { id: 'manual', labelKey: 'meals_manual', icon: PencilLine },
 ]
 
-const MEAL_TYPES: { value: MealType; label: string }[] = [
-  { value: 'breakfast', label: 'Breakfast' },
-  { value: 'lunch', label: 'Lunch' },
-  { value: 'dinner', label: 'Dinner' },
-  { value: 'snack', label: 'Snack' },
+const MEAL_TYPES: { value: MealType; labelKey: 'meals_breakfast' | 'meals_lunch' | 'meals_dinner' | 'meals_snack' }[] = [
+  { value: 'breakfast', labelKey: 'meals_breakfast' },
+  { value: 'lunch', labelKey: 'meals_lunch' },
+  { value: 'dinner', labelKey: 'meals_dinner' },
+  { value: 'snack', labelKey: 'meals_snack' },
 ]
 
 export default function MealsPage() {
   const { user } = useAuth()
+  const { t } = useI18n()
   const [meals, setMeals] = useState<Meal[]>([])
   const [showAdd, setShowAdd] = useState(false)
   const [activeTab, setActiveTab] = useState<InputTab>('manual')
@@ -80,7 +82,7 @@ export default function MealsPage() {
       setShowDetails(true)
     }
     setActiveTab(method as InputTab)
-    toast.success(`Found: ${result.name}`)
+    toast.success(`${t('meals_found')} ${result.name}`)
   }
 
   async function handleBarcodeLookup(code: string) {
@@ -91,7 +93,7 @@ export default function MealsPage() {
     if (result) {
       applyResult(result, 'barcode')
     } else {
-      toast.error('Product not found. Try manual entry.')
+      toast.error(t('meals_not_found'))
     }
   }
 
@@ -108,10 +110,10 @@ export default function MealsPage() {
       if (result) {
         applyResult(result, 'photo')
       } else {
-        toast.error('Could not analyze photo. Try text or manual entry.')
+        toast.error(t('meals_photo_fail'))
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to analyze photo')
+      toast.error(err instanceof Error ? err.message : t('meals_photo_fail_gen'))
     }
     setAnalyzing(false)
   }
@@ -124,10 +126,10 @@ export default function MealsPage() {
       if (result) {
         applyResult(result, 'text')
       } else {
-        toast.error('Could not parse description. Try manual entry.')
+        toast.error(t('meals_text_fail'))
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to analyze text')
+      toast.error(err instanceof Error ? err.message : t('meals_text_fail_gen'))
     }
     setAnalyzing(false)
   }
@@ -151,9 +153,9 @@ export default function MealsPage() {
     })
     setLoading(false)
     if (error) {
-      toast.error('Failed to save meal')
+      toast.error(t('meals_save_fail'))
     } else {
-      toast.success('Meal logged!')
+      toast.success(t('meals_logged'))
       resetForm()
       setShowAdd(false)
       fetchMeals()
@@ -162,7 +164,7 @@ export default function MealsPage() {
 
   async function handleDelete(id: string) {
     await supabase.from('meals').delete().eq('id', id)
-    toast.success('Meal deleted')
+    toast.success(t('meals_deleted'))
     fetchMeals()
   }
 
@@ -185,17 +187,17 @@ export default function MealsPage() {
     <div className="space-y-5 pb-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Meals</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t('meals_title')}</h1>
           <p className="text-slate-500 text-sm">{format(today, 'EEEE, MMMM d')}</p>
         </div>
         <button onClick={() => setShowAdd(!showAdd)} className="btn-primary !py-2 !px-4 text-sm">
-          {showAdd ? <X className="w-4 h-4" /> : '+ Log Meal'}
+          {showAdd ? <X className="w-4 h-4" /> : t('meals_log')}
         </button>
       </div>
 
       {/* Summary */}
       <div className="card !p-3 flex items-center justify-between">
-        <span className="text-sm text-slate-600">Today's total</span>
+        <span className="text-sm text-slate-600">{t('meals_today_total')}</span>
         <span className="font-bold text-lg text-primary-600">{Math.round(todayCalories)} kcal</span>
       </div>
 
@@ -204,7 +206,7 @@ export default function MealsPage() {
         <div className="card space-y-4 animate-slide-up">
           {/* Input Tabs */}
           <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
-            {INPUT_TABS.map(({ id, label, icon: Icon }) => (
+            {INPUT_TABS.map(({ id, labelKey, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
@@ -215,7 +217,7 @@ export default function MealsPage() {
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
-                {label}
+                {t(labelKey)}
               </button>
             ))}
           </div>
@@ -226,7 +228,7 @@ export default function MealsPage() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Enter barcode number..."
+                  placeholder={t('meals_enter_barcode')}
                   value={barcodeInput}
                   onChange={(e) => setBarcodeInput(e.target.value)}
                   className="input-field flex-1"
@@ -239,7 +241,7 @@ export default function MealsPage() {
                 onClick={() => setScanning(true)}
                 className="btn-secondary w-full flex items-center justify-center gap-2"
               >
-                <ScanBarcode className="w-4 h-4" /> Scan with Camera
+                <ScanBarcode className="w-4 h-4" /> {t('meals_scan_camera')}
               </button>
             </div>
           )}
@@ -251,7 +253,7 @@ export default function MealsPage() {
                 <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center cursor-pointer hover:border-primary-400 transition-colors">
                   <Camera className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                   <p className="text-sm text-slate-600">
-                    {photoFile ? photoFile.name : 'Tap to take or upload a photo'}
+                    {photoFile ? photoFile.name : t('meals_take_photo')}
                   </p>
                 </div>
                 <input
@@ -268,7 +270,7 @@ export default function MealsPage() {
                 className="btn-primary w-full flex items-center justify-center gap-2"
               >
                 {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {analyzing ? 'Analyzing...' : 'Analyze Photo'}
+                {analyzing ? t('meals_analyzing') : t('meals_analyze_photo')}
               </button>
             </div>
           )}
@@ -277,7 +279,7 @@ export default function MealsPage() {
           {activeTab === 'text' && (
             <div className="space-y-3">
               <textarea
-                placeholder="Describe your meal... e.g. 'grilled chicken breast with rice and steamed broccoli'"
+                placeholder={t('meals_describe')}
                 value={textDesc}
                 onChange={(e) => setTextDesc(e.target.value)}
                 className="input-field min-h-[100px] resize-none"
@@ -288,14 +290,14 @@ export default function MealsPage() {
                 className="btn-primary w-full flex items-center justify-center gap-2"
               >
                 {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
-                {analyzing ? 'Analyzing...' : 'Estimate Nutrition'}
+                {analyzing ? t('meals_analyzing') : t('meals_estimate')}
               </button>
             </div>
           )}
 
           {/* Meal Type */}
           <div>
-            <label className="label">Meal Type</label>
+            <label className="label">{t('meals_type')}</label>
             <div className="grid grid-cols-4 gap-2">
               {MEAL_TYPES.map((mt) => (
                 <button
@@ -307,7 +309,7 @@ export default function MealsPage() {
                       : 'bg-slate-100 text-slate-600'
                   }`}
                 >
-                  {mt.label}
+                  {t(mt.labelKey)}
                 </button>
               ))}
             </div>
@@ -315,10 +317,10 @@ export default function MealsPage() {
 
           {/* Basic Nutrition Fields */}
           <div>
-            <label className="label">Food Name</label>
+            <label className="label">{t('meals_food_name')}</label>
             <input
               type="text"
-              placeholder="e.g. Chicken Breast & Rice"
+              placeholder={t('meals_food_placeholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="input-field"
@@ -327,19 +329,19 @@ export default function MealsPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">Calories</label>
+              <label className="label">{t('meals_calories')}</label>
               <input type="number" placeholder="0" value={calories} onChange={(e) => setCalories(e.target.value)} className="input-field" />
             </div>
             <div>
-              <label className="label">Protein (g)</label>
+              <label className="label">{t('meals_protein')}</label>
               <input type="number" placeholder="0" value={protein} onChange={(e) => setProtein(e.target.value)} className="input-field" />
             </div>
             <div>
-              <label className="label">Carbs (g)</label>
+              <label className="label">{t('meals_carbs')}</label>
               <input type="number" placeholder="0" value={carbs} onChange={(e) => setCarbs(e.target.value)} className="input-field" />
             </div>
             <div>
-              <label className="label">Fat (g)</label>
+              <label className="label">{t('meals_fat')}</label>
               <input type="number" placeholder="0" value={fat} onChange={(e) => setFat(e.target.value)} className="input-field" />
             </div>
           </div>
@@ -350,7 +352,7 @@ export default function MealsPage() {
             className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
           >
             {showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            {showDetails ? 'Hide detailed nutrition' : 'Show detailed nutrition'}
+            {showDetails ? t('meals_hide_details') : t('meals_show_details')}
           </button>
 
           {showDetails && (
@@ -366,7 +368,7 @@ export default function MealsPage() {
             disabled={loading || !name.trim()}
             className="btn-primary w-full"
           >
-            {loading ? 'Saving...' : 'Save Meal'}
+            {loading ? t('saving') : t('meals_save')}
           </button>
         </div>
       )}
@@ -379,7 +381,7 @@ export default function MealsPage() {
           return (
             <div key={mt.value}>
               <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
-                {mt.label}
+                {t(mt.labelKey)}
               </h3>
               <div className="space-y-2">
                 {typeMeals.map((meal) => (
@@ -432,9 +434,9 @@ export default function MealsPage() {
         {meals.length === 0 && !showAdd && (
           <div className="text-center py-12">
             <UtensilsCrossed className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500">No meals logged today</p>
+            <p className="text-slate-500">{t('meals_no_meals')}</p>
             <button onClick={() => setShowAdd(true)} className="btn-primary mt-4">
-              Log Your First Meal
+              {t('meals_log_first')}
             </button>
           </div>
         )}

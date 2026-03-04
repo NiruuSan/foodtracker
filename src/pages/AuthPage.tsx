@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/i18n'
 import { Dumbbell, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function AuthPage() {
   const { signIn, signUp } = useAuth()
+  const { t } = useI18n()
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -18,10 +20,10 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         await signIn(email, password)
-        toast.success('Welcome back!')
+        toast.success(t('auth_welcome_back'))
       } else {
         await signUp(email, password, fullName)
-        toast.success('Account created! Check your email to confirm.')
+        toast.success(t('auth_account_created'))
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Something went wrong'
@@ -38,8 +40,8 @@ export default function AuthPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur rounded-2xl mb-4">
             <Dumbbell className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white">FitTrack</h1>
-          <p className="text-primary-100 mt-1">Track together, grow together</p>
+          <h1 className="text-3xl font-bold text-white">{t('auth_title')}</h1>
+          <p className="text-primary-100 mt-1">{t('auth_subtitle')}</p>
         </div>
 
         <div className="card">
@@ -50,7 +52,7 @@ export default function AuthPage() {
               }`}
               onClick={() => setIsLogin(true)}
             >
-              Sign In
+              {t('auth_sign_in')}
             </button>
             <button
               className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
@@ -58,14 +60,14 @@ export default function AuthPage() {
               }`}
               onClick={() => setIsLogin(false)}
             >
-              Sign Up
+              {t('auth_sign_up')}
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="label">Full Name</label>
+                <label className="label">{t('auth_full_name')}</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
@@ -81,7 +83,7 @@ export default function AuthPage() {
             )}
 
             <div>
-              <label className="label">Email</label>
+              <label className="label">{t('auth_email')}</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
@@ -96,7 +98,7 @@ export default function AuthPage() {
             </div>
 
             <div>
-              <label className="label">Password</label>
+              <label className="label">{t('auth_password')}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
@@ -126,7 +128,7 @@ export default function AuthPage() {
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                isLogin ? 'Sign In' : 'Create Account'
+                isLogin ? t('auth_sign_in') : t('auth_create_account')
               )}
             </button>
           </form>

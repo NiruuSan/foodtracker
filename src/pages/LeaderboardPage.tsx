@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/i18n'
 import { supabase } from '@/lib/supabase'
 import type { Profile, Friendship } from '@/lib/types'
 import {
@@ -19,6 +20,7 @@ interface FriendData {
 
 export default function LeaderboardPage() {
   const { user, profile } = useAuth()
+  const { t } = useI18n()
   const [tab, setTab] = useState<'board' | 'friends'>('board')
   const [metric, setMetric] = useState<LeaderboardMetric>('streak')
   const [friends, setFriends] = useState<FriendData[]>([])
@@ -156,13 +158,13 @@ export default function LeaderboardPage() {
         .single()
 
       if (!friendProfile) {
-        toast.error('User not found with that email')
+        toast.error(t('lb_user_not_found'))
         setAdding(false)
         return
       }
 
       if (friendProfile.id === user.id) {
-        toast.error("That's you!")
+        toast.error(t('lb_thats_you'))
         setAdding(false)
         return
       }
@@ -175,16 +177,16 @@ export default function LeaderboardPage() {
 
       if (error) {
         if (error.code === '23505') {
-          toast.error('Friend request already exists')
+          toast.error(t('lb_already_exists'))
         } else {
-          toast.error('Failed to send request')
+          toast.error(t('lb_request_fail'))
         }
       } else {
-        toast.success('Friend request sent!')
+        toast.success(t('lb_request_sent'))
         setFriendEmail('')
       }
     } catch {
-      toast.error('Something went wrong')
+      toast.error(t('lb_something_wrong'))
     }
     setAdding(false)
   }
@@ -194,7 +196,7 @@ export default function LeaderboardPage() {
       .from('friendships')
       .update({ status: accept ? 'accepted' : 'rejected' })
       .eq('id', friendshipId)
-    toast.success(accept ? 'Friend added!' : 'Request declined')
+    toast.success(accept ? t('lb_friend_added') : t('lb_request_declined'))
     fetchFriends()
   }
 
@@ -206,17 +208,17 @@ export default function LeaderboardPage() {
     }
   })
 
-  const metrics: { id: LeaderboardMetric; label: string; icon: typeof Flame }[] = [
-    { id: 'streak', label: 'Streak', icon: Flame },
-    { id: 'weight_progress', label: 'Progress', icon: Target },
-    { id: 'activity', label: 'Activity', icon: TrendingUp },
+  const metrics: { id: LeaderboardMetric; labelKey: 'lb_streak' | 'lb_progress' | 'lb_activity'; icon: typeof Flame }[] = [
+    { id: 'streak', labelKey: 'lb_streak', icon: Flame },
+    { id: 'weight_progress', labelKey: 'lb_progress', icon: Target },
+    { id: 'activity', labelKey: 'lb_activity', icon: TrendingUp },
   ]
 
   function getMetricValue(fd: FriendData): string {
     switch (metric) {
-      case 'streak': return `${fd.streak} days`
+      case 'streak': return `${fd.streak} ${t('lb_days')}`
       case 'weight_progress': return `${fd.weightProgress}%`
-      case 'activity': return `${fd.weeklyActivity} min`
+      case 'activity': return `${fd.weeklyActivity} ${t('lb_min')}`
     }
   }
 
@@ -230,7 +232,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="space-y-5 pb-6 animate-fade-in">
-      <h1 className="text-2xl font-bold text-slate-900">Leaderboard</h1>
+      <h1 className="text-2xl font-bold text-slate-900">{t('lb_title')}</h1>
 
       <div className="flex bg-slate-100 rounded-xl p-1">
         <button
@@ -239,7 +241,7 @@ export default function LeaderboardPage() {
             tab === 'board' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
           }`}
         >
-          <Trophy className="w-4 h-4" /> Rankings
+          <Trophy className="w-4 h-4" /> {t('lb_rankings')}
         </button>
         <button
           onClick={() => setTab('friends')}
@@ -247,7 +249,7 @@ export default function LeaderboardPage() {
             tab === 'friends' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
           }`}
         >
-          <Users className="w-4 h-4" /> Friends
+          <Users className="w-4 h-4" /> {t('lb_friends')}
           {pendingRequests.length > 0 && (
             <span className="w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
               {pendingRequests.length}
@@ -259,7 +261,7 @@ export default function LeaderboardPage() {
       {tab === 'board' && (
         <>
           <div className="flex gap-2">
-            {metrics.map(({ id, label, icon: Icon }) => (
+            {metrics.map(({ id, labelKey, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setMetric(id)}
@@ -269,7 +271,7 @@ export default function LeaderboardPage() {
                     : 'bg-slate-100 text-slate-600'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" /> {label}
+                <Icon className="w-3.5 h-3.5" /> {t(labelKey)}
               </button>
             ))}
           </div>
@@ -299,7 +301,7 @@ export default function LeaderboardPage() {
                   <p className="font-medium text-slate-900 truncate">
                     {fd.profile.full_name}
                     {fd.profile.id === user?.id && (
-                      <span className="text-xs text-primary-600 ml-1">(you)</span>
+                      <span className="text-xs text-primary-600 ml-1">{t('lb_you')}</span>
                     )}
                   </p>
                 </div>
@@ -315,14 +317,14 @@ export default function LeaderboardPage() {
           {/* Add Friend */}
           <div className="card space-y-3">
             <h3 className="font-semibold flex items-center gap-2">
-              <UserPlus className="w-4 h-4" /> Add Friend
+              <UserPlus className="w-4 h-4" /> {t('lb_add_friend')}
             </h3>
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="email"
-                  placeholder="Friend's email address"
+                  placeholder={t('lb_friend_email')}
                   value={friendEmail}
                   onChange={(e) => setFriendEmail(e.target.value)}
                   className="input-field pl-10"
@@ -337,7 +339,7 @@ export default function LeaderboardPage() {
           {/* Pending Requests */}
           {pendingRequests.length > 0 && (
             <div className="card space-y-3">
-              <h3 className="font-semibold">Pending Requests</h3>
+              <h3 className="font-semibold">{t('lb_pending')}</h3>
               {pendingRequests.map((req) => (
                 <div key={req.id} className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl">
                   <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center">
@@ -365,10 +367,10 @@ export default function LeaderboardPage() {
 
           {/* Friend List */}
           <div className="card space-y-3">
-            <h3 className="font-semibold">Your Friends</h3>
+            <h3 className="font-semibold">{t('lb_your_friends')}</h3>
             {friends.filter((f) => f.profile.id !== user?.id).length === 0 ? (
               <p className="text-sm text-slate-400 text-center py-4">
-                No friends yet. Add someone above!
+                {t('lb_no_friends')}
               </p>
             ) : (
               friends
@@ -382,7 +384,7 @@ export default function LeaderboardPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-900 truncate">{fd.profile.full_name}</p>
-                      <p className="text-xs text-slate-500">{fd.streak} day streak</p>
+                      <p className="text-xs text-slate-500">{fd.streak} {t('lb_day_streak')}</p>
                     </div>
                   </div>
                 ))

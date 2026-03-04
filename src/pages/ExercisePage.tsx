@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/i18n'
 import { supabase } from '@/lib/supabase'
 import { EXERCISE_TEMPLATES, EXERCISE_CATEGORIES } from '@/lib/exercises-data'
 import type { Exercise } from '@/lib/types'
@@ -11,6 +12,7 @@ import toast from 'react-hot-toast'
 
 export default function ExercisePage() {
   const { user } = useAuth()
+  const { t } = useI18n()
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [showAdd, setShowAdd] = useState(false)
   const [tab, setTab] = useState<'list' | 'manual'>('list')
@@ -72,9 +74,9 @@ export default function ExercisePage() {
     })
     setLoading(false)
     if (error) {
-      toast.error('Failed to save exercise')
+      toast.error(t('ex_save_fail'))
     } else {
-      toast.success('Exercise logged!')
+      toast.success(t('ex_logged'))
       resetForm()
       setShowAdd(false)
       fetchExercises()
@@ -83,7 +85,7 @@ export default function ExercisePage() {
 
   async function handleDelete(id: string) {
     await supabase.from('exercises').delete().eq('id', id)
-    toast.success('Exercise deleted')
+    toast.success(t('ex_deleted'))
     fetchExercises()
   }
 
@@ -109,11 +111,11 @@ export default function ExercisePage() {
     <div className="space-y-5 pb-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Exercise</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t('ex_title')}</h1>
           <p className="text-slate-500 text-sm">{format(today, 'EEEE, MMMM d')}</p>
         </div>
         <button onClick={() => { setShowAdd(!showAdd); resetForm() }} className="btn-primary !py-2 !px-4 text-sm">
-          {showAdd ? <X className="w-4 h-4" /> : '+ Log Exercise'}
+          {showAdd ? <X className="w-4 h-4" /> : t('ex_log')}
         </button>
       </div>
 
@@ -124,7 +126,7 @@ export default function ExercisePage() {
             <Flame className="w-5 h-5 text-orange-600" />
           </div>
           <div>
-            <p className="text-xs text-slate-500">Burned</p>
+            <p className="text-xs text-slate-500">{t('ex_burned')}</p>
             <p className="font-bold text-lg text-slate-900">{Math.round(totalBurned)} kcal</p>
           </div>
         </div>
@@ -133,7 +135,7 @@ export default function ExercisePage() {
             <Clock className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <p className="text-xs text-slate-500">Active</p>
+            <p className="text-xs text-slate-500">{t('ex_active')}</p>
             <p className="font-bold text-lg text-slate-900">{totalMinutes} min</p>
           </div>
         </div>
@@ -149,7 +151,7 @@ export default function ExercisePage() {
                 tab === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
               }`}
             >
-              <Search className="w-3.5 h-3.5 inline mr-1" /> Browse
+              <Search className="w-3.5 h-3.5 inline mr-1" /> {t('ex_browse')}
             </button>
             <button
               onClick={() => setTab('manual')}
@@ -157,7 +159,7 @@ export default function ExercisePage() {
                 tab === 'manual' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
               }`}
             >
-              <PencilLine className="w-3.5 h-3.5 inline mr-1" /> Manual
+              <PencilLine className="w-3.5 h-3.5 inline mr-1" /> {t('ex_manual')}
             </button>
           </div>
 
@@ -165,7 +167,7 @@ export default function ExercisePage() {
             <div className="space-y-3">
               <input
                 type="text"
-                placeholder="Search exercises..."
+                placeholder={t('ex_search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="input-field"
@@ -208,20 +210,20 @@ export default function ExercisePage() {
           {tab === 'manual' && (
             <div className="space-y-3">
               <div>
-                <label className="label">Exercise Name</label>
+                <label className="label">{t('ex_name')}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Morning jog"
+                  placeholder={t('ex_name_placeholder')}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="input-field"
                 />
               </div>
               <div>
-                <label className="label">Description (optional)</label>
+                <label className="label">{t('ex_desc')}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Easy pace around the park"
+                  placeholder={t('ex_desc_placeholder')}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="input-field"
@@ -234,7 +236,7 @@ export default function ExercisePage() {
           {name && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Duration (min)</label>
+                <label className="label">{t('ex_duration')}</label>
                 <input
                   type="number"
                   placeholder="30"
@@ -245,7 +247,7 @@ export default function ExercisePage() {
                 />
               </div>
               <div>
-                <label className="label">Calories Burned</label>
+                <label className="label">{t('ex_calories')}</label>
                 <input
                   type="number"
                   placeholder="0"
@@ -262,7 +264,7 @@ export default function ExercisePage() {
             disabled={loading || !name.trim() || !duration}
             className="btn-primary w-full"
           >
-            {loading ? 'Saving...' : 'Log Exercise'}
+            {loading ? t('saving') : t('ex_save')}
           </button>
         </div>
       )}
@@ -295,9 +297,9 @@ export default function ExercisePage() {
         {exercises.length === 0 && !showAdd && (
           <div className="text-center py-12">
             <Dumbbell className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500">No exercises logged today</p>
+            <p className="text-slate-500">{t('ex_no_exercises')}</p>
             <button onClick={() => setShowAdd(true)} className="btn-primary mt-4">
-              Log Your First Exercise
+              {t('ex_log_first')}
             </button>
           </div>
         )}

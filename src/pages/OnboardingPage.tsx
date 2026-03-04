@@ -3,25 +3,20 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { calculateTargets } from '@/lib/nutrition'
 import type { Gender, ActivityLevel, WeightGoal } from '@/lib/types'
+import { useI18n } from '@/i18n'
 import { ChevronRight, ChevronLeft, Scale, Ruler, Calendar, User, Zap, Target } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-const STEPS = [
-  { title: 'Basic Info', subtitle: 'Tell us about yourself' },
-  { title: 'Body Stats', subtitle: 'Your current measurements' },
-  { title: 'Activity Level', subtitle: 'How active are you?' },
-  { title: 'Your Goal', subtitle: 'What do you want to achieve?' },
-]
-
-const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string; desc: string }[] = [
-  { value: 'sedentary', label: 'Sedentary', desc: 'Little to no exercise' },
-  { value: 'light', label: 'Lightly Active', desc: 'Light exercise 1-3 days/week' },
-  { value: 'moderate', label: 'Moderately Active', desc: 'Moderate exercise 3-5 days/week' },
-  { value: 'active', label: 'Very Active', desc: 'Hard exercise 6-7 days/week' },
-  { value: 'very_active', label: 'Extra Active', desc: 'Very hard exercise & physical job' },
+const ACTIVITY_OPTIONS_BASE: { value: ActivityLevel; labelKey: string; descKey: string }[] = [
+  { value: 'sedentary', labelKey: 'onboard_sedentary', descKey: 'onboard_sedentary_desc' },
+  { value: 'light', labelKey: 'onboard_light', descKey: 'onboard_light_desc' },
+  { value: 'moderate', labelKey: 'onboard_moderate', descKey: 'onboard_moderate_desc' },
+  { value: 'active', labelKey: 'onboard_active', descKey: 'onboard_active_desc' },
+  { value: 'very_active', labelKey: 'onboard_very_active', descKey: 'onboard_very_active_desc' },
 ]
 
 export default function OnboardingPage() {
+  const { t } = useI18n()
   const { user, refreshProfile } = useAuth()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -33,6 +28,19 @@ export default function OnboardingPage() {
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate')
   const [weightGoal, setWeightGoal] = useState<WeightGoal>('maintain')
   const [targetWeight, setTargetWeight] = useState('')
+
+  const STEPS = [
+    { title: t('onboard_basic_title'), subtitle: t('onboard_basic_sub') },
+    { title: t('onboard_body_title'), subtitle: t('onboard_body_sub') },
+    { title: t('onboard_activity_title'), subtitle: t('onboard_activity_sub') },
+    { title: t('onboard_goal_title'), subtitle: t('onboard_goal_sub') },
+  ]
+
+  const genderLabels: Record<Gender, string> = {
+    male: t('onboard_male'),
+    female: t('onboard_female'),
+    other: t('onboard_other'),
+  }
 
   async function handleComplete() {
     if (!user) return
@@ -70,7 +78,7 @@ export default function OnboardingPage() {
       })
 
       await refreshProfile()
-      toast.success('All set! Welcome to FitTrack!')
+      toast.success(t('onboard_success'))
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to save'
       toast.error(msg)
@@ -114,7 +122,7 @@ export default function OnboardingPage() {
               <div className="space-y-5">
                 <div>
                   <label className="label flex items-center gap-2">
-                    <Calendar className="w-4 h-4" /> Age
+                    <Calendar className="w-4 h-4" /> {t('onboard_age')}
                   </label>
                   <input
                     type="number"
@@ -128,7 +136,7 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <label className="label flex items-center gap-2">
-                    <User className="w-4 h-4" /> Gender
+                    <User className="w-4 h-4" /> {t('onboard_gender')}
                   </label>
                   <div className="grid grid-cols-3 gap-3">
                     {(['male', 'female', 'other'] as Gender[]).map((g) => (
@@ -142,7 +150,7 @@ export default function OnboardingPage() {
                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                         }`}
                       >
-                        {g}
+                        {genderLabels[g]}
                       </button>
                     ))}
                   </div>
@@ -154,7 +162,7 @@ export default function OnboardingPage() {
               <div className="space-y-5">
                 <div>
                   <label className="label flex items-center gap-2">
-                    <Ruler className="w-4 h-4" /> Height (cm)
+                    <Ruler className="w-4 h-4" /> {t('onboard_height')}
                   </label>
                   <input
                     type="number"
@@ -168,7 +176,7 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <label className="label flex items-center gap-2">
-                    <Scale className="w-4 h-4" /> Current Weight (kg)
+                    <Scale className="w-4 h-4" /> {t('onboard_weight')}
                   </label>
                   <input
                     type="number"
@@ -186,7 +194,7 @@ export default function OnboardingPage() {
 
             {step === 2 && (
               <div className="space-y-3">
-                {ACTIVITY_OPTIONS.map((opt) => (
+                {ACTIVITY_OPTIONS_BASE.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
@@ -202,8 +210,8 @@ export default function OnboardingPage() {
                         activityLevel === opt.value ? 'text-primary-500' : 'text-slate-400'
                       }`} />
                       <div>
-                        <p className="font-semibold text-slate-900">{opt.label}</p>
-                        <p className="text-sm text-slate-500">{opt.desc}</p>
+                        <p className="font-semibold text-slate-900">{t(opt.labelKey as Parameters<typeof t>[0])}</p>
+                        <p className="text-sm text-slate-500">{t(opt.descKey as Parameters<typeof t>[0])}</p>
                       </div>
                     </div>
                   </button>
@@ -215,9 +223,9 @@ export default function OnboardingPage() {
               <div className="space-y-5">
                 <div className="grid grid-cols-3 gap-3">
                   {([
-                    { value: 'lose' as WeightGoal, label: 'Lose', emoji: '🔥' },
-                    { value: 'maintain' as WeightGoal, label: 'Maintain', emoji: '⚖️' },
-                    { value: 'gain' as WeightGoal, label: 'Gain', emoji: '💪' },
+                    { value: 'lose' as WeightGoal, labelKey: 'onboard_lose', emoji: '🔥' },
+                    { value: 'maintain' as WeightGoal, labelKey: 'onboard_maintain', emoji: '⚖️' },
+                    { value: 'gain' as WeightGoal, labelKey: 'onboard_gain', emoji: '💪' },
                   ]).map((g) => (
                     <button
                       key={g.value}
@@ -230,14 +238,14 @@ export default function OnboardingPage() {
                       }`}
                     >
                       <span className="text-2xl block mb-1">{g.emoji}</span>
-                      {g.label}
+                      {t(g.labelKey as Parameters<typeof t>[0])}
                     </button>
                   ))}
                 </div>
                 {weightGoal !== 'maintain' && (
                   <div>
                     <label className="label flex items-center gap-2">
-                      <Target className="w-4 h-4" /> Target Weight (kg)
+                      <Target className="w-4 h-4" /> {t('onboard_target_weight')}
                     </label>
                     <input
                       type="number"
@@ -261,7 +269,7 @@ export default function OnboardingPage() {
                 onClick={() => setStep(step - 1)}
                 className="btn-secondary flex items-center gap-1"
               >
-                <ChevronLeft className="w-4 h-4" /> Back
+                <ChevronLeft className="w-4 h-4" /> {t('back')}
               </button>
             )}
             {step < STEPS.length - 1 ? (
@@ -270,7 +278,7 @@ export default function OnboardingPage() {
                 disabled={!canProceed()}
                 className="btn-primary flex-1 flex items-center justify-center gap-1"
               >
-                Next <ChevronRight className="w-4 h-4" />
+                {t('next')} <ChevronRight className="w-4 h-4" />
               </button>
             ) : (
               <button
@@ -281,7 +289,7 @@ export default function OnboardingPage() {
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  "Let's Go! 🚀"
+                  t('onboard_lets_go')
                 )}
               </button>
             )}

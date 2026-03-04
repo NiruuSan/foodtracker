@@ -1,4 +1,6 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { useI18n } from '@/i18n'
+import type { TranslationKey } from '@/i18n'
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -8,15 +10,16 @@ import {
 } from 'lucide-react'
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Home' },
-  { to: '/meals', icon: UtensilsCrossed, label: 'Meals' },
-  { to: '/exercise', icon: Dumbbell, label: 'Exercise' },
-  { to: '/leaderboard', icon: Trophy, label: 'Board' },
-  { to: '/profile', icon: UserCircle, label: 'Profile' },
+  { to: '/', icon: LayoutDashboard, labelKey: 'nav_home' as TranslationKey },
+  { to: '/meals', icon: UtensilsCrossed, labelKey: 'nav_meals' as TranslationKey },
+  { to: '/exercise', icon: Dumbbell, labelKey: 'nav_exercise' as TranslationKey },
+  { to: '/leaderboard', icon: Trophy, labelKey: 'nav_board' as TranslationKey },
+  { to: '/profile', icon: UserCircle, labelKey: 'nav_profile' as TranslationKey },
 ]
 
 export default function Layout() {
   const location = useLocation()
+  const { t } = useI18n()
 
   return (
     <div
@@ -32,7 +35,7 @@ export default function Layout() {
 
       <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-50">
         <div className="max-w-lg mx-auto flex items-center justify-around px-2 py-1">
-          {navItems.map(({ to, icon: Icon, label }) => {
+          {navItems.map(({ to, icon: Icon, labelKey }) => {
             const active = location.pathname === to || 
               (to !== '/' && location.pathname.startsWith(to))
             return (
@@ -46,7 +49,7 @@ export default function Layout() {
                 }`}
               >
                 <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} />
-                <span className="text-[10px] font-medium">{label}</span>
+                <span className="text-[10px] font-medium">{t(labelKey)}</span>
               </NavLink>
             )
           })}

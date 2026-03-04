@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/i18n'
 import { supabase } from '@/lib/supabase'
 import { calculateTargets } from '@/lib/nutrition'
 import type { Gender, ActivityLevel, WeightGoal } from '@/lib/types'
@@ -14,6 +15,7 @@ import { useEffect, useCallback } from 'react'
 
 export default function ProfilePage() {
   const { profile, user, signOut, refreshProfile } = useAuth()
+  const { t, locale, setLocale } = useI18n()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [showWeightLog, setShowWeightLog] = useState(false)
@@ -75,9 +77,9 @@ export default function ProfilePage() {
 
       await refreshProfile()
       setEditing(false)
-      toast.success('Profile updated! Targets recalculated.')
+      toast.success(t('prof_updated'))
     } catch {
-      toast.error('Failed to save')
+      toast.error(t('prof_save_fail'))
     }
     setSaving(false)
   }
@@ -96,15 +98,15 @@ export default function ProfilePage() {
     setCurrentWeight(String(weight))
     setNewWeight('')
     fetchWeightLogs()
-    toast.success('Weight logged!')
+    toast.success(t('prof_weight_logged'))
   }
 
   return (
     <div className="space-y-5 pb-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Profile</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t('prof_title')}</h1>
         <button onClick={signOut} className="btn-ghost text-red-500 hover:bg-red-50 flex items-center gap-1.5 text-sm">
-          <LogOut className="w-4 h-4" /> Sign Out
+          <LogOut className="w-4 h-4" /> {t('prof_sign_out')}
         </button>
       </div>
 
@@ -121,27 +123,36 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Language */}
+      <div className="card">
+        <h3 className="font-semibold text-slate-900 mb-3">{t('prof_language')}</h3>
+        <div className="flex gap-3">
+          <button onClick={() => setLocale('en')} className={`flex-1 py-2.5 rounded-xl font-medium transition-all ${locale === 'en' ? 'bg-primary-500 text-white' : 'bg-slate-100 text-slate-600'}`}>English</button>
+          <button onClick={() => setLocale('fr')} className={`flex-1 py-2.5 rounded-xl font-medium transition-all ${locale === 'fr' ? 'bg-primary-500 text-white' : 'bg-slate-100 text-slate-600'}`}>Français</button>
+        </div>
+      </div>
+
       {/* Current Targets */}
       {!editing && (
         <div className="card space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-slate-900">Daily Targets</h3>
+            <h3 className="font-semibold text-slate-900">{t('prof_daily_targets')}</h3>
             <button onClick={() => setEditing(true)} className="text-sm text-primary-600 font-medium">
-              Edit Profile
+              {t('prof_edit')}
             </button>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: 'Calories', value: `${profile?.daily_calories_target ?? 0} kcal`, icon: '🔥' },
-              { label: 'Protein', value: `${profile?.daily_protein_target ?? 0}g`, icon: '🥩' },
-              { label: 'Carbs', value: `${profile?.daily_carbs_target ?? 0}g`, icon: '🍞' },
-              { label: 'Fat', value: `${profile?.daily_fat_target ?? 0}g`, icon: '🥑' },
-              { label: 'Water', value: `${((profile?.daily_water_target ?? 0) / 1000).toFixed(1)}L`, icon: '💧' },
-              { label: 'Goal', value: profile?.weight_goal ?? 'maintain', icon: '🎯' },
+              { labelKey: 'prof_calories' as const, value: `${profile?.daily_calories_target ?? 0} kcal`, icon: '🔥' },
+              { labelKey: 'prof_protein' as const, value: `${profile?.daily_protein_target ?? 0}g`, icon: '🥩' },
+              { labelKey: 'prof_carbs' as const, value: `${profile?.daily_carbs_target ?? 0}g`, icon: '🍞' },
+              { labelKey: 'prof_fat' as const, value: `${profile?.daily_fat_target ?? 0}g`, icon: '🥑' },
+              { labelKey: 'prof_water' as const, value: `${((profile?.daily_water_target ?? 0) / 1000).toFixed(1)}L`, icon: '💧' },
+              { labelKey: 'prof_goal' as const, value: profile?.weight_goal ?? 'maintain', icon: '🎯' },
             ].map((item) => (
-              <div key={item.label} className="p-3 bg-slate-50 rounded-xl">
+              <div key={item.labelKey} className="p-3 bg-slate-50 rounded-xl">
                 <span className="text-lg">{item.icon}</span>
-                <p className="text-xs text-slate-500 mt-1">{item.label}</p>
+                <p className="text-xs text-slate-500 mt-1">{t(item.labelKey)}</p>
                 <p className="font-semibold text-slate-900 capitalize">{item.value}</p>
               </div>
             ))}
@@ -150,17 +161,17 @@ export default function ProfilePage() {
           <div className="pt-2 space-y-2">
             <div className="flex items-center gap-2 text-sm">
               <Scale className="w-4 h-4 text-slate-400" />
-              <span className="text-slate-600">Current Weight</span>
+              <span className="text-slate-600">{t('prof_current_weight')}</span>
               <span className="ml-auto font-semibold">{profile?.current_weight} kg</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Target className="w-4 h-4 text-slate-400" />
-              <span className="text-slate-600">Target Weight</span>
+              <span className="text-slate-600">{t('prof_target_weight')}</span>
               <span className="ml-auto font-semibold">{profile?.target_weight} kg</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Ruler className="w-4 h-4 text-slate-400" />
-              <span className="text-slate-600">Height</span>
+              <span className="text-slate-600">{t('prof_height')}</span>
               <span className="ml-auto font-semibold">{profile?.height} cm</span>
             </div>
           </div>
@@ -170,69 +181,69 @@ export default function ProfilePage() {
       {/* Edit Form */}
       {editing && (
         <div className="card space-y-4 animate-fade-in">
-          <h3 className="font-semibold text-slate-900">Edit Profile</h3>
+          <h3 className="font-semibold text-slate-900">{t('prof_edit')}</h3>
 
           <div>
-            <label className="label flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> Name</label>
+            <label className="label flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> {t('prof_name')}</label>
             <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className="input-field" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Age</label>
+              <label className="label flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {t('prof_age')}</label>
               <input type="number" value={age} onChange={(e) => setAge(e.target.value)} className="input-field" />
             </div>
             <div>
-              <label className="label flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> Gender</label>
+              <label className="label flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> {t('prof_gender')}</label>
               <select value={gender} onChange={(e) => setGender(e.target.value as Gender)} className="input-field">
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
+                <option value="male">{t('onboard_male')}</option>
+                <option value="female">{t('onboard_female')}</option>
+                <option value="other">{t('onboard_other')}</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label flex items-center gap-1.5"><Ruler className="w-3.5 h-3.5" /> Height (cm)</label>
+              <label className="label flex items-center gap-1.5"><Ruler className="w-3.5 h-3.5" /> {t('prof_height')} (cm)</label>
               <input type="number" value={height} onChange={(e) => setHeight(e.target.value)} className="input-field" />
             </div>
             <div>
-              <label className="label flex items-center gap-1.5"><Scale className="w-3.5 h-3.5" /> Weight (kg)</label>
+              <label className="label flex items-center gap-1.5"><Scale className="w-3.5 h-3.5" /> {t('prof_current_weight')} (kg)</label>
               <input type="number" value={currentWeight} onChange={(e) => setCurrentWeight(e.target.value)} className="input-field" step="0.1" />
             </div>
           </div>
 
           <div>
-            <label className="label flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> Activity Level</label>
+            <label className="label flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> {t('prof_activity')}</label>
             <select value={activityLevel} onChange={(e) => setActivityLevel(e.target.value as ActivityLevel)} className="input-field">
-              <option value="sedentary">Sedentary</option>
-              <option value="light">Lightly Active</option>
-              <option value="moderate">Moderately Active</option>
-              <option value="active">Very Active</option>
-              <option value="very_active">Extra Active</option>
+              <option value="sedentary">{t('prof_sedentary')}</option>
+              <option value="light">{t('prof_light')}</option>
+              <option value="moderate">{t('prof_moderate')}</option>
+              <option value="active">{t('prof_active')}</option>
+              <option value="very_active">{t('prof_very_active')}</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> Goal</label>
+              <label className="label flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> {t('prof_goal_label')}</label>
               <select value={weightGoal} onChange={(e) => setWeightGoal(e.target.value as WeightGoal)} className="input-field">
-                <option value="lose">Lose Weight</option>
-                <option value="maintain">Maintain</option>
-                <option value="gain">Gain Weight</option>
+                <option value="lose">{t('prof_lose')}</option>
+                <option value="maintain">{t('prof_maintain')}</option>
+                <option value="gain">{t('prof_gain')}</option>
               </select>
             </div>
             <div>
-              <label className="label flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> Target (kg)</label>
+              <label className="label flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> {t('prof_target')}</label>
               <input type="number" value={targetWeight} onChange={(e) => setTargetWeight(e.target.value)} className="input-field" step="0.1" />
             </div>
           </div>
 
           <div className="flex gap-3">
-            <button onClick={() => setEditing(false)} className="btn-secondary flex-1">Cancel</button>
+            <button onClick={() => setEditing(false)} className="btn-secondary flex-1">{t('cancel')}</button>
             <button onClick={handleSave} disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
-              <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save'}
+              <Save className="w-4 h-4" /> {saving ? t('saving') : t('save')}
             </button>
           </div>
         </div>
@@ -244,7 +255,7 @@ export default function ProfilePage() {
           onClick={() => setShowWeightLog(!showWeightLog)}
           className="w-full flex items-center justify-between"
         >
-          <span className="font-semibold text-slate-900">Log Weight</span>
+          <span className="font-semibold text-slate-900">{t('prof_log_weight')}</span>
           {showWeightLog ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
         {showWeightLog && (
@@ -252,7 +263,7 @@ export default function ProfilePage() {
             <div className="flex gap-2">
               <input
                 type="number"
-                placeholder="Weight in kg"
+                placeholder={t('prof_weight_placeholder')}
                 value={newWeight}
                 onChange={(e) => setNewWeight(e.target.value)}
                 className="input-field flex-1"
@@ -268,7 +279,7 @@ export default function ProfilePage() {
 
       {/* Weight Chart */}
       <div className="card">
-        <h3 className="font-semibold text-slate-900 mb-3">Weight Progress</h3>
+        <h3 className="font-semibold text-slate-900 mb-3">{t('prof_weight_progress')}</h3>
         <WeightChart logs={weightLogs} targetWeight={profile?.target_weight} />
       </div>
     </div>
